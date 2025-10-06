@@ -5,80 +5,90 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
-    public function index(): View
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
     {
         $rooms = Room::paginate(15);
-
         return view('admin.rooms.index', compact('rooms'));
     }
 
-
-    public function create(): View
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
         return view('admin.rooms.create');
     }
 
-
-    public function store(Request $request): RedirectResponse
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        $request->validate([
-            'room_number' => 'required|string|max:10|unique:rooms,room_number',
-            'type' => 'required|string|max:50',
-            'capacity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
+        $validated = $request->validate([
+            'room_number' => ['required', 'string', 'max:255', 'unique:rooms,room_number'],
+            'type' => ['required', 'string', 'max:255'],
+            'capacity' => ['required', 'integer', 'min:1'],
+            'base_price' => ['required', 'numeric', 'min:1'],
+            'status' => ['required'],
         ]);
 
-        Room::create([
-            'room_number' => $request->room_number,
-            'type' => $request->type,
-            'capacity' => $request->capacity,
-            'price' => $request->price,
-            'is_available' => true,
-        ]);
+        Room::create($validated);
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Room Added Successfully');
+        return redirect()->route('rooms.index')->with('success', 'Room created successfully.');
     }
 
-
-    public function show(Room $room): View
+    /**
+     * Display the specified resource.
+     */
+    public function show(Room $room)
     {
         return view('admin.rooms.show', compact('room'));
     }
 
-
-    public function edit(Room $room): View
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Room $room)
     {
         return view('admin.rooms.edit', compact('room'));
     }
 
-    public function update(Request $request, Room $room): RedirectResponse
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Room $room)
     {
-        $request->validate([
-            'room_number' => 'required|string|max:10|unique:rooms,room_number,' . $room->id,
-            'type' => 'required|string|max:50',
-            'capacity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
-            'is_available' => 'boolean',
+        $validated = $request->validate([
+            'room_number' => ['required', 'string', 'max:255', Rule::unique('rooms')->ignore($room->id)],
+            'type' => ['required', 'string', 'max:255'],
+            'capacity' => ['required', 'integer', 'min:1'],
+            'base_price' => ['required', 'numeric', 'min:1'],
+            'status' => ['required'],
         ]);
 
-        $room->update($request->all());
+        $room->update($validated);
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Room updated Successfully');
+        return redirect()->route('rooms.index')->with('success', 'Room updated successfully.');
     }
 
-    public function destroy(Room $room): RedirectResponse
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Room $room)
     {
-        $room->delete();
+        // Prevent deletion if the room has active reservations (assuming 'status' != 'cancelled')
+        if ($room->reservations()->where('status', '!=', 'cancelled')->exists()) {
+            return redirect()->route('rooms.index')->with('error', 'Cannot delete room with active reservations.');
+        }
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Room Deleted Successfully');
+        $room->delete();
+        return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');
     }
 }

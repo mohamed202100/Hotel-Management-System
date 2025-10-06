@@ -9,14 +9,25 @@ use Illuminate\Http\Request;
 class CustomerController extends Controller
 {
     /**
+     * Define validation rules based on the fillable fields.
+     */
+    protected function validationRules($customerId = null)
+    {
+        return [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:customers,email,' . $customerId . '|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'passport_id' => 'required|string|unique:customers,passport_id,' . $customerId . '|max:50',
+        ];
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // Fetch all customers from the database
-        $customers = Customer::all();
-
-        // Pass the customers to the index view
+        $customers = Customer::paginate(15);
         return view('admin.customers.index', compact('customers'));
     }
 
@@ -33,17 +44,11 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email|max:255',
-            'phone_number' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-        ]);
+        $validatedData = $request->validate($this->validationRules());
 
-        Customer::create($validated);
+        Customer::create($validatedData);
 
-        return redirect()->route('customers.index')->with('success', __('Customer created successfully.'));
+        return redirect()->route('customers.index')->with('success', 'Customer created successfully!');
     }
 
     /**
@@ -67,18 +72,11 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            // Ensure unique email check excludes the current customer's email
-            'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
-            'phone_number' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-        ]);
+        $validatedData = $request->validate($this->validationRules($customer->id));
 
-        $customer->update($validated);
+        $customer->update($validatedData);
 
-        return redirect()->route('customers.index')->with('success', __('Customer updated successfully.'));
+        return redirect()->route('customers.index')->with('success', 'Customer updated successfully!');
     }
 
     /**
@@ -86,8 +84,12 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        $customer->delete();
+        // Check for related reservations before deleting
+        if ($customer->reservations()->count() > 0) {
+            return redirect()->route('customers.index')->with('error', 'Cannot delete customer with active reservations.');
+        }
 
-        return redirect()->route('customers.index')->with('success', __('Customer deleted successfully.'));
+        $customer->delete();
+        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully!');
     }
 }

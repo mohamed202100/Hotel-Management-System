@@ -1,68 +1,76 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Edit Customer') . ': ' . $customer->first_name . ' ' . $customer->last_name }}
+            {{ __('Edit Customer') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6 lg:p-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                <form method="POST" action="{{ route('customers.update', $customer) }}">
-                    @csrf
-                    @method('PUT')
-
-                    <!-- First Name -->
-                    <div class="mt-4">
-                        <x-input-label for="first_name" :value="__('First Name')" />
-                        <x-text-input id="first_name" class="block mt-1 w-full" type="text" name="first_name"
-                            :value="old('first_name', $customer->first_name)" required autofocus />
-                        <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
-                    </div>
-
-                    <!-- Last Name -->
-                    <div class="mt-4">
-                        <x-input-label for="last_name" :value="__('Last Name')" />
-                        <x-text-input id="last_name" class="block mt-1 w-full" type="text" name="last_name"
-                            :value="old('last_name', $customer->last_name)" required />
-                        <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
-                    </div>
-
-                    <!-- Email -->
-                    <div class="mt-4">
-                        <x-input-label for="email" :value="__('Email Address')" />
-                        <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
-                            :value="old('email', $customer->email)" required />
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                    </div>
-
-                    <!-- Phone Number -->
-                    <div class="mt-4">
-                        <x-input-label for="phone_number" :value="__('Phone Number (Optional)')" />
-                        <x-text-input id="phone_number" class="block mt-1 w-full" type="text" name="phone_number"
-                            :value="old('phone_number', $customer->phone_number)" />
-                        <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
-                    </div>
-
-                    <!-- Address -->
-                    <div class="mt-4">
-                        <x-input-label for="address" :value="__('Address (Optional)')" />
-                        <textarea id="address" name="address" rows="3"
-                            class="block w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 mt-1">{{ old('address', $customer->address) }}</textarea>
-                        <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                    </div>
-
-                    <div class="flex items-center justify-end mt-6">
+                    <!-- Header and Back Button -->
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                        <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('Editing') }}:
+                            {{ $customer->first_name . ' ' . $customer->last_name }}</h3>
                         <a href="{{ route('customers.index') }}"
-                            class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline mr-4">
-                            {{ __('Cancel') }}
+                            class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
+                            {{ __('Back to List') }}
                         </a>
-                        <x-primary-button>
-                            {{ __('Update Customer') }}
-                        </x-primary-button>
                     </div>
-                </form>
+
+                    <!-- Form -->
+                    <form method="POST" action="{{ route('customers.update', $customer->id) }}" class="mt-6 space-y-6">
+                        @csrf
+                        @method('PUT')
+
+                        <!-- First Name -->
+                        <div>
+                            <x-input-label for="first_name" :value="__('First Name')" />
+                            <x-text-input id="first_name" name="first_name" type="text" class="mt-1 block w-full"
+                                :value="old('first_name', $customer->first_name)" required autofocus autocomplete="first_name" />
+                            <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
+                        </div>
+
+                        <!-- Last Name -->
+                        <div>
+                            <x-input-label for="last_name" :value="__('Last Name')" />
+                            <x-text-input id="last_name" name="last_name" type="text" class="mt-1 block w-full"
+                                :value="old('last_name', $customer->last_name)" required autocomplete="last_name" />
+                            <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <x-input-label for="email" :value="__('Email Address')" />
+                            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full"
+                                :value="old('email', $customer->email)" required autocomplete="email" />
+                            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <x-input-label for="phone_number" :value="__('Phone Number')" />
+                            <x-text-input id="phone_number" name="phone_number" type="text" class="mt-1 block w-full"
+                                :value="old('phone_number', $customer->phone_number)" autocomplete="phone_number" />
+                            <x-input-error class="mt-2" :messages="$errors->get('phone_number')" />
+                        </div>
+
+                        <!-- Passport ID / National ID -->
+                        <div>
+                            <x-input-label for="passport_id" :value="__('Passport ID / National ID')" />
+                            <x-text-input id="passport_id" name="passport_id" type="text" class="mt-1 block w-full"
+                                :value="old('passport_id', $customer->passport_id)" required autocomplete="passport_id" />
+                            <x-input-error class="mt-2" :messages="$errors->get('passport_id')" />
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <x-primary-button>{{ __('Save Changes') }}</x-primary-button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
         </div>
     </div>

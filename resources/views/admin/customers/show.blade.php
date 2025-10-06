@@ -6,44 +6,62 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                <div class="p-6 lg:p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        {{ $customer->first_name . ' ' . $customer->last_name }}</h3>
-
-                    <div class="space-y-4 text-gray-700 dark:text-gray-300">
-                        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <span class="font-semibold">{{ __('Email Address') }}:</span>
-                            <span>{{ $customer->email }}</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <span class="font-semibold">{{ __('Phone Number') }}:</span>
-                            <span>{{ $customer->phone_number ?? __('Not provided') }}</span>
-                        </div>
-                        <div class="border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <span class="font-semibold block mb-1">{{ __('Address') }}:</span>
-                            <p class="pl-4 italic">{{ $customer->address ?? __('No address available') }}</p>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2 text-sm">
-                            <span class="font-semibold">{{ __('Member Since') }}:</span>
-                            <span>{{ $customer->created_at->format('M d, Y') }}</span>
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                        <h3 class="text-3xl font-extrabold text-indigo-500">
+                            {{ $customer->first_name . ' ' . $customer->last_name }}</h3>
+                        <div class="space-x-2 flex">
+                            <!-- Edit Button -->
+                            <a href="{{ route('customers.edit', $customer->id) }}"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
+                                {{ __('Edit Customer') }}
+                            </a>
+                            <!-- Back Button -->
+                            <a href="{{ route('customers.index') }}"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
+                                {{ __('Back to List') }}
+                            </a>
                         </div>
                     </div>
 
-                    <div class="flex justify-end mt-6 space-x-3">
-                        <a href="{{ route('customers.index') }}"
-                            class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            {{ __('Back to List') }}
-                        </a>
-                        <a href="{{ route('customers.edit', $customer) }}"
-                            class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            {{ __('Edit Customer') }}
-                        </a>
-                    </div>
+                    <!-- Details Grid -->
+                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('First Name') }}</dt>
+                            <dd class="mt-1 text-xl font-semibold">{{ $customer->first_name }}</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Last Name') }}</dt>
+                            <dd class="mt-1 text-xl font-semibold">{{ $customer->last_name }}</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Email Address') }}</dt>
+                            <dd class="mt-1 text-xl font-semibold">{{ $customer->email }}</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Phone Number') }}</dt>
+                            <dd class="mt-1 text-xl font-semibold">{{ $customer->phone_number ?? 'N/A' }}</dd>
+                        </div>
+                        <div class="md:col-span-2">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Passport ID / National ID') }}</dt>
+                            <dd class="mt-1 text-xl font-semibold">{{ $customer->passport_id }}</dd>
+                        </div>
+
+                        <!-- Optional: Creation/Update Timestamps -->
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Date Created') }}</dt>
+                            <dd class="mt-1 text-sm">{{ $customer->created_at->format('M d, Y H:i A') }}</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Last Updated') }}</dt>
+                            <dd class="mt-1 text-sm">{{ $customer->updated_at->format('M d, Y H:i A') }}</dd>
+                        </div>
+                    </dl>
+
                 </div>
-
             </div>
         </div>
     </div>
