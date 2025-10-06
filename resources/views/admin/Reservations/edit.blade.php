@@ -14,7 +14,6 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <!-- Error Display -->
                     @if ($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
                             role="alert">
@@ -27,7 +26,6 @@
                         </div>
                     @endif
 
-                    <!-- Header and Back Button -->
                     <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                         <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('Editing Reservation') }}
                             #{{ $reservation->id }}</h3>
@@ -43,7 +41,6 @@
                         @method('PUT')
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Customer Selection -->
                             <div>
                                 <x-input-label for="customer_id" :value="__('Customer')" />
                                 <select id="customer_id" name="customer_id"
@@ -60,7 +57,6 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('customer_id')" />
                             </div>
 
-                            <!-- Room Selection -->
                             <div>
                                 <x-input-label for="room_id" :value="__('Room')" />
                                 <select id="room_id" name="room_id"
@@ -79,7 +75,6 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Check-in Date -->
                             <div>
                                 <x-input-label for="check_in_date" :value="__('Check-in Date')" />
                                 <x-text-input id="check_in_date" name="check_in_date" type="date"
@@ -87,7 +82,6 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('check_in_date')" />
                             </div>
 
-                            <!-- Check-out Date -->
                             <div>
                                 <x-input-label for="check_out_date" :value="__('Check-out Date')" />
                                 <x-text-input id="check_out_date" name="check_out_date" type="date"
@@ -96,9 +90,7 @@
                             </div>
                         </div>
 
-                        <!-- Status and Price Display -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t dark:border-gray-700">
-                            <!-- Reservation Status -->
                             <div>
                                 <x-input-label for="status" :value="__('Reservation Status')" />
                                 <select id="status" name="status"
@@ -113,19 +105,16 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('status')" />
                             </div>
 
-                            <!-- Nights Display -->
                             <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
                                 <p class="text-sm font-semibold text-gray-400">{{ __('Nights') }}</p>
                                 <p id="total_nights" class="text-xl font-bold">0</p>
                             </div>
 
-                            <!-- Total Price Display (Total amount must be sent) -->
                             <div class="bg-indigo-100 dark:bg-indigo-700 p-3 rounded-lg">
                                 <p class="text-sm font-semibold text-indigo-400">{{ __('Total Est. Price') }}</p>
                                 <p id="total_amount_display"
                                     class="text-2xl font-extrabold text-indigo-900 dark:text-indigo-200">$0.00</p>
 
-                                <!-- Hidden input for total_amount and subtotal to be sent to controller -->
                                 <input type="hidden" id="subtotal" name="subtotal"
                                     value="{{ $reservation->subtotal }}">
                                 <input type="hidden" id="total_amount" name="total_amount"
@@ -133,11 +122,9 @@
                             </div>
                         </div>
 
-                        <!-- Invoice / Payment Update Section -->
                         <h4 class="text-xl font-semibold border-b pb-2 mt-8">{{ __('Payment Update') }}</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                            <!-- Payment Status -->
                             <div>
                                 <x-input-label for="payment_status" :value="__('Payment Status')" />
                                 <select id="payment_status" name="payment_status"
@@ -152,7 +139,6 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('payment_status')" />
                             </div>
 
-                            <!-- Amount Paid -->
                             <div>
                                 <x-input-label for="amount_paid" :value="__('Amount Paid Now')" />
                                 <x-text-input id="amount_paid" name="amount_paid" type="number" step="0.01"
@@ -172,7 +158,6 @@
         </div>
     </div>
 
-    <!-- JavaScript for Date and Price Calculation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -211,15 +196,12 @@
                 }
             }
 
-            // Set initial min date on load for check-in
             checkInInput.min = moment().format('YYYY-MM-DD');
 
-            // Attach event listeners
             checkInInput.addEventListener('change', calculatePrice);
             checkOutInput.addEventListener('change', calculatePrice);
             roomSelect.addEventListener('change', calculatePrice);
 
-            // Initial calculation (must run on load to show current price)
             calculatePrice();
         });
     </script>
