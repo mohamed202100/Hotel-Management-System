@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -8,11 +10,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
-
-Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
 
 Route::middleware('auth')->group(function () {
 
@@ -26,9 +23,17 @@ Route::middleware('auth')->group(function () {
 });
 
 
+Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
+
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+    Route::resource('rooms', RoomController::class);
+
+    Route::resource('customers', CustomerController::class);
 });
 
 require __DIR__ . '/auth.php';
