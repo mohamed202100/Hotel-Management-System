@@ -40,7 +40,7 @@
                     </a>
 
                     <!-- Reservations Card (Placeholder for next step) -->
-                    <a href="#"
+                    <a href="{{ route('reservations.index') }}"
                         class="block p-6 bg-red-500 hover:bg-red-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                         <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Reservations') }}</h2>
                         <p class="text-red-100">{{ __('View and create new bookings and check-in/out guests.') }}</p>
