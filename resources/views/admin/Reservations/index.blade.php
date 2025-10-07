@@ -87,7 +87,8 @@
                                             <td class="py-4 px-6">
                                                 {{ \Carbon\Carbon::parse($reservation->check_out_date)->format('Y-m-d') }}
                                             </td>
-                                            <td class="py-4 px-6">${{ number_format($reservation->total_amount, 2) }}
+                                            <td class="py-4 px-6">
+                                                ${{ number_format($reservation->total_amount, 2) }}
                                             </td>
                                             <td class="py-4 px-6">
                                                 @php

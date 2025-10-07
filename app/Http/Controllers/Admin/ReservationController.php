@@ -8,7 +8,7 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Customer;
 use App\Models\Reservation;
 use App\Models\Room;
-use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +16,16 @@ class ReservationController extends Controller
 {
     public function index()
     {
-        $query = Reservation::with(['room', 'customer', 'invoice'])->orderBy('check_in_date', 'desc');
+        $query = Reservation::with(['room', 'customer', 'invoice'])
+            ->orderByRaw("
+            CASE
+                WHEN status = 'confirmed' THEN 1
+                WHEN status = 'checked_in' THEN 2
+                WHEN status = 'pending' THEN 3
+                ELSE 4
+            END ASC
+        ")
+            ->orderBy('check_in_date', 'asc');
 
         if ($status = request('status')) {
             $query->where('status', $status);
@@ -26,6 +35,7 @@ class ReservationController extends Controller
 
         return view('admin.reservations.index', compact('reservations'));
     }
+
 
     public function create()
     {
@@ -37,7 +47,7 @@ class ReservationController extends Controller
 
     private function isRoomAvailable($roomId, $checkIn, $checkOut, $excludeReservationId = null)
     {
-        return Reservation::where('room_id', $roomId)
+        $conflictingReservation = Reservation::where('room_id', $roomId)
             ->when($excludeReservationId, fn($q) => $q->where('id', '!=', $excludeReservationId))
             ->where(function ($query) use ($checkIn, $checkOut) {
                 $query->whereBetween('check_in_date', [$checkIn, $checkOut])
@@ -47,9 +57,13 @@ class ReservationController extends Controller
                             ->where('check_out_date', '>', $checkOut);
                     });
             })
-            ->whereNotIn('status', ['cancelled'])
-            ->doesntExist();
+            ->whereIn('status', ['checked_in', 'confirmed'])
+            ->exists();
+
+        return !$conflictingReservation;
     }
+
+
 
     private function updateRoomStatus(Reservation $reservation)
     {
@@ -180,5 +194,14 @@ class ReservationController extends Controller
 
         $reservation->load(['room', 'customer', 'invoice']);
         return view('admin.invoices.show', compact('reservation'));
+    }
+
+    public function printInvoice($id)
+    {
+        $reservation = Reservation::with(['customer', 'room', 'invoice'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('admin.invoices.show', compact('reservation'));
+
+        return $pdf->stream('invoice_' . $reservation->id . '.pdf');
     }
 }

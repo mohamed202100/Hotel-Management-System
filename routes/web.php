@@ -68,6 +68,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Reservations CRUD (Admin can view/edit ALL)
     Route::resource('reservations', ReservationController::class);
 
+    Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
+
+
     // User Role Management (NEW)
     Route::resource('users', UserController::class);
 

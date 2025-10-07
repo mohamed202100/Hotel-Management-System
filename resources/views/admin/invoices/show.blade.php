@@ -17,20 +17,19 @@ use Carbon\Carbon;
                 <div class="flex justify-between items-center mb-10 border-b border-gray-300 pb-4 print:hidden">
                     <h1 class="text-3xl font-extrabold text-indigo-600">{{ __('Invoice') }}
                         #{{ $reservation->invoice->id ?? 'N/A' }}</h1>
-                    <button onclick="window.print()"
-                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
+                    <a href="{{ route('reservations.invoice.pdf', $reservation->id) }}"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">
                         {{ __('Print Invoice') }}
-                    </button>
+                    </a>
                 </div>
 
-                <div class="text-lg font-bold mb-8 print:block">
-                    <!-- Invoice Header (Visible on Print) -->
-                    <h1 class="text-3xl text-indigo-600 mb-2 print:text-black">HOTEL MANAGEMENT SYSTEM</h1>
-                    <p class="text-sm print:text-black">{{ __('Invoice Date') }}: {{ Carbon::now()->format('F d, Y') }}
-                    </p>
+                <!-- Hotel Info -->
+                <div class="text-lg font-bold mb-8">
+                    <h1 class="text-3xl text-indigo-600 mb-2">{{ __('HOTEL MANAGEMENT SYSTEM') }}</h1>
+                    <p class="text-sm">{{ __('Invoice Date') }}: {{ Carbon::now()->format('F d, Y') }}</p>
                 </div>
 
-                <!-- Reservation and Customer Info -->
+                <!-- Customer & Reservation Info -->
                 <div class="grid grid-cols-2 gap-8 mb-8">
                     <div>
                         <h2 class="text-xl font-bold mb-2 border-b pb-1 text-gray-500">{{ __('Billed To') }}</h2>
@@ -52,7 +51,7 @@ use Carbon\Carbon;
                     </div>
                 </div>
 
-                <!-- Items Table -->
+                <!-- Charges Table -->
                 <h2 class="text-xl font-bold mb-2 border-b pb-1 text-gray-500">{{ __('Charges Summary') }}</h2>
                 <div class="overflow-x-auto relative sm:rounded-lg mb-8">
                     @php
@@ -63,6 +62,7 @@ use Carbon\Carbon;
                         $subtotalAmount = $basePrice * $nights;
                         $taxRate = $reservation->invoice->tax_rate ?? 0.0;
                         $taxAmount = $subtotalAmount * $taxRate;
+                        $totalAmount = $subtotalAmount + $taxAmount;
                     @endphp
 
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -86,7 +86,7 @@ use Carbon\Carbon;
                     </table>
                 </div>
 
-                <!-- Totals and Payment Summary -->
+                <!-- Totals -->
                 <div class="flex justify-end">
                     <div class="w-full md:w-1/2 lg:w-1/3 space-y-2">
                         <div class="flex justify-between border-b pb-1">
@@ -99,7 +99,7 @@ use Carbon\Carbon;
                         </div>
                         <div class="flex justify-between text-xl font-bold text-indigo-600 pt-2">
                             <span>{{ __('TOTAL AMOUNT') }}:</span>
-                            <span>${{ number_format($reservation->total_amount, 2) }}</span>
+                            <span>${{ number_format($totalAmount, 2) }}</span>
                         </div>
                         <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-400">
                             <span>{{ __('Amount Paid') }}:</span>
@@ -107,17 +107,18 @@ use Carbon\Carbon;
                         </div>
                         <div class="flex justify-between text-2xl font-extrabold pt-2 text-red-600">
                             <span>{{ __('BALANCE DUE') }}:</span>
-                            <span>${{ number_format($reservation->total_amount - ($reservation->invoice->amount_paid ?? 0), 2) }}</span>
+                            <span>${{ number_format($totalAmount - ($reservation->invoice->amount_paid ?? 0), 2) }}</span>
                         </div>
                         <div class="mt-4 text-center">
                             @php
                                 $paymentStatus = $reservation->invoice->payment_status ?? 'unpaid';
-                                $color =
-                                    $paymentStatus === 'paid'
-                                        ? 'bg-green-600'
-                                        : ($paymentStatus === 'unpaid'
-                                            ? 'bg-red-600'
-                                            : 'bg-yellow-600');
+                                $color = match ($paymentStatus) {
+                                    'paid' => 'bg-green-600',
+                                    'unpaid' => 'bg-red-600',
+                                    'partially_paid' => 'bg-yellow-600',
+                                    'refunded' => 'bg-gray-500',
+                                    default => 'bg-gray-500',
+                                };
                             @endphp
                             <span
                                 class="font-bold text-lg inline-block px-4 py-2 rounded-full text-white {{ $color }}">
@@ -134,15 +135,13 @@ use Carbon\Carbon;
         </div>
     </div>
 </x-app-layout>
+
 <style>
     @media print {
-
-        /* Hide everything not in the print area */
         body>*:not(#invoice-print-area) {
             display: none;
         }
 
-        /* Make the print area full width */
         #invoice-print-area {
             max-width: none !important;
             box-shadow: none !important;
@@ -150,7 +149,6 @@ use Carbon\Carbon;
             padding: 0 !important;
         }
 
-        /* Unhide only the print content */
         .print\:hidden {
             display: none !important;
         }
@@ -159,14 +157,8 @@ use Carbon\Carbon;
             display: block !important;
         }
 
-        /* Ensure readable text color on print */
         .print\:text-black {
             color: #000 !important;
         }
-
-        .print\:text-black h1 {
-            color: #000 !important;
-        }
-
     }
 </style>
