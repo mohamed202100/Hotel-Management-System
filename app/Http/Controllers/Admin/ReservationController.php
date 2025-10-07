@@ -123,70 +123,28 @@ class ReservationController extends Controller
 
     public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
-        $isAdmin = auth()->user()?->role === 'admin';
-        $isPending = $reservation->status === 'pending';
+        $reservation->update($request->only([
+            'room_id',
+            'customer_id',
+            'check_in_date',
+            'check_out_date',
+            'subtotal',
+            'total_amount',
+            'status',
+        ]));
 
-        if (!$isPending && !$isAdmin && !$this->isRoomAvailable(
-            $request->room_id,
-            $request->check_in_date,
-            $request->check_out_date,
-            $reservation->id
-        )) {
-            return back()
-                ->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])
-                ->withInput();
-        }
-
-        if ($isAdmin && !$this->isRoomAvailable(
-            $request->room_id,
-            $request->check_in_date,
-            $request->check_out_date,
-            $reservation->id
-        ) && !$request->has('confirm_override')) {
-            return back()
-                ->with('warning', 'This room is already booked for the selected date range. Confirm override to proceed.')
-                ->withInput();
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $reservation->update($request->only([
-                'room_id',
-                'customer_id',
-                'check_in_date',
-                'check_out_date',
-                'subtotal',
-                'total_amount',
-                'status',
-            ]));
-
-            if ($reservation->invoice) {
-                $reservation->invoice->update([
-                    'amount_due' => $request->total_amount,
-                    'amount_paid' => $request->input('amount_paid', $reservation->invoice->amount_paid),
-                    'payment_status' => $request->input('payment_status', $reservation->invoice->payment_status),
-                ]);
-            }
-
-            $this->updateRoomStatus($reservation);
-
-            DB::commit();
-
-            return redirect()->route('reservations.index')
-                ->with('success', 'Reservation updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Reservation update failed', [
-                'reservation_id' => $reservation->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+        if ($reservation->invoice) {
+            $reservation->invoice->update([
+                'amount_due' => $request->total_amount,
+                'amount_paid' => $request->input('amount_paid', $reservation->invoice->amount_paid),
+                'payment_status' => $request->input('payment_status', $reservation->invoice->payment_status),
             ]);
-            return back()
-                ->withErrors(['error' => 'An error occurred during reservation update. Please try again.'])
-                ->withInput();
         }
+
+        return redirect()->route('reservations.index')
+            ->with('success', 'Reservation updated successfully.');
     }
+
 
     public function destroy(Reservation $reservation)
     {
