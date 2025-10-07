@@ -31,6 +31,22 @@ class ReservationController extends Controller
         return view('admin.reservations.create', compact('rooms', 'customers'));
     }
 
+    private function isRoomAvailable($roomId, $checkIn, $checkOut, $excludeReservationId = null)
+    {
+        return Reservation::where('room_id', $roomId)
+            ->when($excludeReservationId, fn($q) => $q->where('id', '!=', $excludeReservationId))
+            ->where(function ($query) use ($checkIn, $checkOut) {
+                $query->whereBetween('check_in_date', [$checkIn, $checkOut])
+                    ->orWhereBetween('check_out_date', [$checkIn, $checkOut])
+                    ->orWhere(function ($q) use ($checkIn, $checkOut) {
+                        $q->where('check_in_date', '<', $checkIn)
+                            ->where('check_out_date', '>', $checkOut);
+                    });
+            })
+            ->whereNotIn('status', ['cancelled'])
+            ->doesntExist();
+    }
+
 
     public function store(Request $request)
     {
@@ -45,21 +61,8 @@ class ReservationController extends Controller
 
         $request->validate($rules);
 
-        $isAvailable = Reservation::where('room_id', $request->room_id)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('check_in_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhereBetween('check_out_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhere(function ($q) use ($request) {
-                        $q->where('check_in_date', '<', $request->check_in_date)
-                            ->where('check_out_date', '>', $request->check_out_date);
-                    });
-            })
-            ->whereNotIn('status', ['cancelled'])
-            ->doesntExist();
-
-
-        if (!$isAvailable) {
-            return redirect()->back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
+        if (!$this->isRoomAvailable($request->room_id, $request->check_in_date, $request->check_out_date)) {
+            return back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
         }
 
         DB::beginTransaction();
@@ -129,21 +132,8 @@ class ReservationController extends Controller
 
         $request->validate($rules);
 
-        $isAvailable = Reservation::where('room_id', $request->room_id)
-            ->where('id', '!=', $reservation->id)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('check_in_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhereBetween('check_out_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhere(function ($q) use ($request) {
-                        $q->where('check_in_date', '<', $request->check_in_date)
-                            ->where('check_out_date', '>', $request->check_out_date);
-                    });
-            })
-            ->whereNotIn('status', ['cancelled'])
-            ->doesntExist();
-
-        if (!$isAvailable) {
-            return redirect()->back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
+        if (!$this->isRoomAvailable($request->room_id, $request->check_in_date, $request->check_out_date)) {
+            return back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
         }
 
         DB::beginTransaction();
