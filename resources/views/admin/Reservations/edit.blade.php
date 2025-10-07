@@ -26,6 +26,15 @@
                         </div>
                     @endif
 
+                    <!-- Warning Message -->
+                    @if (session('warning'))
+                        <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded relative mb-6"
+                            role="alert">
+                            <strong class="font-bold">{{ __('Warning!') }}</strong>
+                            <span class="block sm:inline">{{ session('warning') }}</span>
+                        </div>
+                    @endif
+
                     <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                         <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('Editing Reservation') }}
                             #{{ $reservation->id }}</h3>

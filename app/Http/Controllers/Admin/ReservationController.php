@@ -3,25 +3,29 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreReservationRequest;
+use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Customer;
-use App\Models\Invoice;
 use App\Models\Reservation;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
     public function index()
     {
-        $reservations = Reservation::with(['room', 'customer', 'invoice'])
-            ->orderBy('check_in_date', 'asc')
-            ->get();
+        $query = Reservation::with(['room', 'customer', 'invoice'])->orderBy('check_in_date', 'desc');
+
+        if ($status = request('status')) {
+            $query->where('status', $status);
+        }
+
+        $reservations = $query->paginate(10);
 
         return view('admin.reservations.index', compact('reservations'));
     }
-
 
     public function create()
     {
@@ -47,25 +51,27 @@ class ReservationController extends Controller
             ->doesntExist();
     }
 
-
-    public function store(Request $request)
+    private function updateRoomStatus(Reservation $reservation)
     {
-        $rules = [
-            'customer_id' => ['required', 'exists:customers,id'],
-            'room_id' => ['required', 'exists:rooms,id'],
-            'check_in_date' => ['required', 'date', 'after_or_equal:today'],
-            'check_out_date' => ['required', 'date', 'after:check_in_date'],
-            'total_amount' => ['required', 'numeric', 'min:0.01'],
-            'status' => ['required', Rule::in(['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'])],
-        ];
+        if (!$reservation->room) return;
 
-        $request->validate($rules);
+        match ($reservation->status) {
+            'checked_in', 'confirmed' => $reservation->room->update(['status' => 'occupied']),
+            'checked_out', 'cancelled' => $reservation->room->update(['status' => 'available']),
+            default => null,
+        };
+    }
 
+    public function store(StoreReservationRequest $request)
+    {
         if (!$this->isRoomAvailable($request->room_id, $request->check_in_date, $request->check_out_date)) {
-            return back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
+            return back()->withErrors([
+                'room_id' => 'The selected room is already booked for the specified date range.'
+            ])->withInput();
         }
 
         DB::beginTransaction();
+
         try {
             $reservation = Reservation::create($request->only([
                 'room_id',
@@ -83,9 +89,7 @@ class ReservationController extends Controller
                 'payment_status' => 'unpaid',
             ]);
 
-            if (in_array($reservation->status, ['confirmed', 'checked_in'])) {
-                Room::where('id', $reservation->room_id)->update(['status' => 'occupied']);
-            }
+            $this->updateRoomStatus($reservation);
 
             DB::commit();
 
@@ -93,12 +97,15 @@ class ReservationController extends Controller
                 ->with('success', 'Reservation created successfully and invoice generated.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
+            Log::error('Reservation creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return back()
                 ->withErrors(['error' => 'An error occurred during reservation. Please try again.'])
                 ->withInput();
         }
     }
-
 
     public function show(Reservation $reservation)
     {
@@ -106,37 +113,43 @@ class ReservationController extends Controller
         return view('admin.reservations.show', compact('reservation'));
     }
 
-
     public function edit(Reservation $reservation)
     {
-
         $rooms = Room::orderBy('room_number')->get();
         $customers = Customer::orderBy('last_name')->get();
 
         return view('admin.reservations.edit', compact('reservation', 'rooms', 'customers'));
     }
 
-
-    public function update(Request $request, Reservation $reservation)
+    public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
-        $rules = [
-            'customer_id' => ['required', 'exists:customers,id'],
-            'room_id' => ['required', 'exists:rooms,id'],
-            'check_in_date' => ['required', 'date', 'after_or_equal:today'],
-            'check_out_date' => ['required', 'date', 'after:check_in_date'],
-            'total_amount' => ['required', 'numeric', 'min:0.01'],
-            'status' => ['required', Rule::in(['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'])],
-            'payment_status' => [Rule::in(['unpaid', 'paid', 'partially_paid', 'refunded'])],
-            'amount_paid' => ['nullable', 'numeric', 'min:0'],
-        ];
+        $isAdmin = auth()->user()?->role === 'admin';
+        $isPending = $reservation->status === 'pending';
 
-        $request->validate($rules);
+        if (!$isPending && !$isAdmin && !$this->isRoomAvailable(
+            $request->room_id,
+            $request->check_in_date,
+            $request->check_out_date,
+            $reservation->id
+        )) {
+            return back()
+                ->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])
+                ->withInput();
+        }
 
-        if (!$this->isRoomAvailable($request->room_id, $request->check_in_date, $request->check_out_date)) {
-            return back()->withErrors(['room_id' => 'The selected room is already booked for the specified date range.'])->withInput();
+        if ($isAdmin && !$this->isRoomAvailable(
+            $request->room_id,
+            $request->check_in_date,
+            $request->check_out_date,
+            $reservation->id
+        ) && !$request->has('confirm_override')) {
+            return back()
+                ->with('warning', 'This room is already booked for the selected date range. Confirm override to proceed.')
+                ->withInput();
         }
 
         DB::beginTransaction();
+
         try {
             $reservation->update($request->only([
                 'room_id',
@@ -151,20 +164,12 @@ class ReservationController extends Controller
             if ($reservation->invoice) {
                 $reservation->invoice->update([
                     'amount_due' => $request->total_amount,
-                    'amount_paid' => $request->amount_paid ?? $reservation->invoice->amount_paid,
-                    'payment_status' => $request->payment_status ?? $reservation->invoice->payment_status,
+                    'amount_paid' => $request->input('amount_paid', $reservation->invoice->amount_paid),
+                    'payment_status' => $request->input('payment_status', $reservation->invoice->payment_status),
                 ]);
             }
 
-            $room = $reservation->room;
-            if ($room) {
-                if (in_array($reservation->status, ['checked_in', 'confirmed'])) {
-                    $room->update(['status' => 'occupied']);
-                } elseif ($reservation->status == 'checked_out' || $reservation->status == 'cancelled') {
-                    $room->update(['status' => 'available']);
-                }
-            }
-
+            $this->updateRoomStatus($reservation);
 
             DB::commit();
 
@@ -172,22 +177,27 @@ class ReservationController extends Controller
                 ->with('success', 'Reservation updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
+            Log::error('Reservation update failed', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return back()
                 ->withErrors(['error' => 'An error occurred during reservation update. Please try again.'])
                 ->withInput();
         }
     }
-
 
     public function destroy(Reservation $reservation)
     {
         DB::beginTransaction();
         try {
             $reservation->invoice()->delete();
-
             $reservation->delete();
 
-            Room::where('id', $reservation->room_id)->update(['status' => 'available']);
+            if ($reservation->room) {
+                $reservation->room->update(['status' => 'available']);
+            }
 
             DB::commit();
 
@@ -195,23 +205,22 @@ class ReservationController extends Controller
                 ->with('success', 'Reservation deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
-                ->withErrors(['error' => 'An error occurred while deleting the reservation.']);
+            Log::error('Reservation deletion failed', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return back()->withErrors(['error' => 'An error occurred while deleting the reservation.']);
         }
     }
 
     public function invoice(Reservation $reservation)
     {
-        // 1. Check if the invoice exists before showing.
         if (!$reservation->invoice) {
-            // Optional: Redirect back with an error, or generate a 404
-            return redirect()->back()->with('error', 'Invoice details are not available for this reservation.');
+            return back()->with('error', 'Invoice details are not available for this reservation.');
         }
 
-        // 2. Load related data (Room and Customer)
         $reservation->load(['room', 'customer', 'invoice']);
-
-        // 3. Return the print-friendly view
         return view('admin.invoices.show', compact('reservation'));
     }
 }
