@@ -75,6 +75,12 @@
                                         {{ __('Profile') }}
                                     </x-dropdown-link>
 
+                                    @if (!Auth::user()->hasRole('admin'))
+                                        <x-dropdown-link :href="route('customer.edit-guest-profile')">
+                                            {{ __('Edit Customer Profile') }}
+                                        </x-dropdown-link>
+                                    @endif
+
                                     <!-- Authentication (LOGOUT FORM) -->
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf

@@ -71,7 +71,14 @@
                                             <td class="py-4 px-6">
                                                 @php
                                                     $status = $reservation->status;
-                                                    $color = 'bg-gray-500';
+                                                    $color =
+                                                        [
+                                                            'pending' => 'bg-yellow-500',
+                                                            'confirmed' => 'bg-indigo-600',
+                                                            'checked_in' => 'bg-green-600',
+                                                            'checked_out' => 'bg-gray-500',
+                                                            'cancelled' => 'bg-red-600',
+                                                        ][$status] ?? 'bg-gray-500';
                                                 @endphp
                                                 <span
                                                     class="inline-block px-3 py-1 text-xs font-semibold text-white {{ $color }} rounded-full">

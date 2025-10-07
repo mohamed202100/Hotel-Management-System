@@ -43,11 +43,13 @@ class GuestReservationController extends Controller
      */
     public function create(Request $request)
     {
-        // Retrieve room_id from the request if the user clicked 'Book Now'
         $selectedRoomId = $request->input('room_id');
         $rooms = Room::where('status', 'available')->get();
 
-        return view('my_reservations.create-guest', compact('rooms', 'selectedRoomId'));
+        // Pass the customer object itself for the warning check in the view
+        $customer = Auth::user()->customer;
+
+        return view('my_reservations.create-guest', compact('rooms', 'selectedRoomId', 'customer'));
     }
 
     /**
@@ -55,70 +57,85 @@ class GuestReservationController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        $customer = $user->customer;
+
+        // ✅ Validation
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after:check_in_date',
         ]);
 
+        // ✅ جلب بيانات الغرفة
         $room = Room::findOrFail($validated['room_id']);
-        $user = Auth::user();
 
-        // 1. Find or create Customer associated with the logged-in User
-        $customer = Customer::firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'first_name' => $user->name,
-                'last_name' => '',
-                'email' => $user->email,
-                'phone_number' => 'N/A',
-                'passport_id' => 'N/A',
-            ]
-        );
-
-        $checkIn = Carbon::parse($validated['check_in_date']);
-        $checkOut = Carbon::parse($validated['check_out_date']);
-
-        // 2. Check for room availability based on dates
-        $isAvailable = $this->checkRoomAvailability($validated['room_id'], $checkIn, $checkOut, null);
-
-        if (!$isAvailable) {
-            return back()->withErrors(['room_id' => 'The selected room is no longer available during the specified dates.'])->withInput();
+        // ✅ معالجة التواريخ بطريقة مضمونة بدون مشاكل timezone
+        try {
+            $checkIn = Carbon::createFromFormat('Y-m-d', $validated['check_in_date'])->startOfDay();
+            $checkOut = Carbon::createFromFormat('Y-m-d', $validated['check_out_date'])->startOfDay();
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'check_in_date' => 'Invalid date format provided.'
+            ])->withInput();
         }
 
-        // 3. Calculate total amount
-        $nights = $checkOut->diffInDays($checkIn);
-        $totalAmount = $room->base_price * $nights * 1.15; // Assuming 15% tax included in calculation
+        // ✅ تحقق أن تاريخ الخروج بعد الدخول فعلاً
+        if ($checkOut->lte($checkIn)) {
+            return back()->withErrors([
+                'check_out_date' => 'Check-out date must be after check-in date.'
+            ])->withInput();
+        }
 
-        // 4. Start Database Transaction
+        // ✅ حساب عدد الليالي
+        $nights = $checkOut->diffInDays($checkIn);
+
+        // ✅ التحقق من توافر الغرفة
+        $isAvailable = $this->checkRoomAvailability($validated['room_id'], $checkIn, $checkOut, null);
+        if (!$isAvailable) {
+            return back()->withErrors([
+                'room_id' => 'The selected room is no longer available during the specified dates.'
+            ])->withInput();
+        }
+
+        // ✅ حساب المبالغ
+        $subtotal = $room->base_price * $nights;
+        $taxRate = 0.15;
+        $totalAmount = $subtotal * (1 + $taxRate);
+
         DB::beginTransaction();
         try {
+            // ✅ إنشاء الحجز
             $reservation = Reservation::create([
                 'room_id' => $validated['room_id'],
                 'customer_id' => $customer->id,
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
+                'subtotal' => $subtotal,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
             ]);
 
+            // ✅ إنشاء الفاتورة
             Invoice::create([
                 'reservation_id' => $reservation->id,
                 'amount_due' => $totalAmount,
                 'amount_paid' => 0,
-                'tax_rate' => 0.15,
+                'tax_rate' => $taxRate,
                 'payment_status' => 'unpaid',
             ]);
 
             DB::commit();
 
-            return redirect()->route('guest.reservations.index')->with('success', 'Your reservation request (ID: ' . $reservation->id . ') has been submitted successfully.');
+            // ✅ النجاح
+            return redirect()
+                ->route('guest.reservations.index')
+                ->with('success', 'Your reservation request (ID: ' . $reservation->id . ') has been submitted successfully and is pending confirmation by the hotel administration.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to submit reservation: ' . $e->getMessage())->withInput();
         }
     }
-
 
     /**
      * Private helper function to check room availability.

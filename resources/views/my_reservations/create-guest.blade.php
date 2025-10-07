@@ -19,14 +19,9 @@
                         </a>
                     </div>
 
-                    <!-- Note: Customer data is pre-filled/derived from logged-in user -->
                     <div class="mb-6 p-4 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-700 dark:text-blue-300">
-                        {{ __('Your reservation will be submitted under your registered name (') }}{{ Auth::user()->name ?? 'Guest' }}{{ __('), but please ensure your full profile is complete.') }}
-                        <a href="{{ route('customer.edit-guest-profile') }}" class="font-bold underline ml-2">
-                            {{ __('Complete Your Profile Details') }}
-                        </a>
+                        {{ __('Your reservation will be submitted under your complete profile details and set to PENDING confirmation.') }}
                     </div>
-
                     <form method="POST" action="{{ route('reservations.store-guest') }}" class="mt-6 space-y-6">
                         @csrf
 
@@ -85,7 +80,10 @@
                         </div>
 
                         <div class="flex items-center gap-4">
-                            <x-primary-button>{{ __('Confirm Reservation Request') }}</x-primary-button>
+                            <!-- Button is now ALWAYS enabled -->
+                            <x-primary-button type="submit">
+                                {{ __('Confirm Reservation Request') }}
+                            </x-primary-button>
                         </div>
                     </form>
 
@@ -97,8 +95,9 @@
 
 <script>
     // Set min date to today for check-in
-    document.getElementById('check_in_date').min = new Date().toISOString().split('T')[0];
-    document.getElementById('check_out_date').min = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('check_in_date').min = today;
+    document.getElementById('check_out_date').min = today;
 
     function calculatePrice() {
         const roomSelect = document.getElementById('room_id');
@@ -109,47 +108,58 @@
 
         let selectedPrice = 0;
         let nights = 0;
-        const TAX_RATE = 0.15; // Assuming 15% tax as used in the controller
+        const TAX_RATE = 0.15;
 
-        // 1. Get Room Price
-        if (roomSelect.value) {
+        // Get room price
+        if (roomSelect && roomSelect.value) {
             const selectedOption = roomSelect.options[roomSelect.selectedIndex];
-            selectedPrice = parseFloat(selectedOption.getAttribute('data-price'));
+            selectedPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
         }
 
-        // 2. Calculate Nights
+        // Calculate nights
         if (checkInDate && checkOutDate) {
             const date1 = new Date(checkInDate);
             const date2 = new Date(checkOutDate);
 
-            // Ensure Check-out is after Check-in
             if (date2 > date1) {
-                // Calculate difference in milliseconds
                 const diffTime = Math.abs(date2 - date1);
-                // Convert to days
-                nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                nights = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             } else {
-                // Clear out date if invalid
+                alert('Check-out date must be after Check-in date.');
                 document.getElementById('check_out_date').value = '';
+                nights = 0;
             }
         }
 
         nightsDisplay.textContent = nights;
 
-        // 3. Calculate Total Price
+        // Calculate total
         if (selectedPrice > 0 && nights > 0) {
             let total = selectedPrice * nights;
-            // Add tax
             total = total * (1 + TAX_RATE);
-            priceDisplay.textContent = '$' + total.toFixed(2);
+            priceDisplay.textContent = '$' + total.toLocaleString(undefined, {
+                minimumFractionDigits: 2
+            });
         } else {
             priceDisplay.textContent = '$0.00';
         }
     }
 
-    // Initialize listeners and calculation
+    // Adjust check-out min date dynamically
+    document.getElementById('check_in_date').addEventListener('change', function() {
+        const checkIn = new Date(this.value);
+        if (!isNaN(checkIn)) {
+            const minCheckout = new Date(checkIn);
+            minCheckout.setDate(checkIn.getDate() + 1);
+            document.getElementById('check_out_date').min = minCheckout.toISOString().split('T')[0];
+        }
+        calculatePrice();
+    });
+
+    // Initialize
     document.addEventListener('DOMContentLoaded', calculatePrice);
     if (document.getElementById('room_id')) {
         document.getElementById('room_id').addEventListener('change', calculatePrice);
     }
+    document.getElementById('check_out_date').addEventListener('change', calculatePrice);
 </script>
