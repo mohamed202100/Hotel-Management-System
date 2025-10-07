@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -91,5 +94,43 @@ class CustomerController extends Controller
 
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully!');
+    }
+
+    public function editGuestProfile(): View
+    {
+        // 1. Find the Customer record associated with the current logged-in User
+        $customer = Auth::user()->customer;
+        // Use the generic customer edit view, passing the specific customer object
+        return view('my_reservations.edit-profile', compact('customer'));
+    }
+
+    /**
+     * Update the logged-in user's customer profile.
+     */
+    public function updateGuestProfile(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $customer = Auth::user()->customer;
+
+        // Validation rules for the guest profile update
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => ['required', 'email', Rule::unique('customers')->ignore($customer->id)],
+            'phone_number' => 'required|string|min:10|max:20',
+            'passport_id' => 'required|string|max:14|min:14',
+        ]);
+
+        // 1. Update the Customer record
+        $customer->update($validated);
+
+        // 2. OPTIONAL: Update the primary User record if name/email changed (for consistency)
+        if ($customer->user) {
+            $customer->user->update([
+                'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+                'email' => $validated['email'],
+            ]);
+        }
+
+        return redirect()->route('guest.reservations.index')->with('success', 'Your customer profile has been updated successfully.');
     }
 }

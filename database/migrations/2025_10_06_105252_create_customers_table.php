@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade'); // Linked to User account
+
             $table->string('first_name');
-            $table->string('last_name');
-            $table->string('email')->unique()->nullable();
-            $table->string('phone_number')->unique();
+            $table->string('last_name')->nullable();
+            $table->string('email')->unique();
+
+            // **IMPORTANT FIX: Ensure these are nullable and NOT unique**
+            $table->string('phone_number')->nullable();
             $table->string('passport_id')->nullable();
+
             $table->timestamps();
         });
     }

@@ -21,7 +21,10 @@
 
                     <!-- Note: Customer data is pre-filled/derived from logged-in user -->
                     <div class="mb-6 p-4 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-700 dark:text-blue-300">
-                        {{ __('Your personal information will be used for this booking.') }}
+                        {{ __('Your reservation will be submitted under your registered name (') }}{{ Auth::user()->name ?? 'Guest' }}{{ __('), but please ensure your full profile is complete.') }}
+                        <a href="{{ route('customer.edit-guest-profile') }}" class="font-bold underline ml-2">
+                            {{ __('Complete Your Profile Details') }}
+                        </a>
                     </div>
 
                     <form method="POST" action="{{ route('reservations.store-guest') }}" class="mt-6 space-y-6">

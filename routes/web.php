@@ -4,8 +4,9 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\RoomController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\GuestReservationController; // NEW CONTROLLER
+use App\Http\Controllers\GuestReservationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomViewerController;
 use Illuminate\Support\Facades\Auth;
@@ -26,13 +27,12 @@ Route::middleware('auth')->group(function () {
         }
         // Guest users are redirected to their custom reservations index
         return redirect()->route('guest.reservations.index');
-    })->name('dashboard'); // This route handles the default post-login redirect
+    })->name('dashboard');
 
     // 2. Room Viewing (Guest can only see available rooms)
     Route::get('/available-rooms', [RoomViewerController::class, 'available'])->name('rooms.available');
 
-    // 3. Guest Reservation Management (Using the new decoupled controller)
-    // NOTE: The function is now 'index' on the GuestReservationController
+    // 3. Guest Reservation Management
     Route::get('/my-reservations', [GuestReservationController::class, 'index'])->name('guest.reservations.index');
     Route::get('/my-reservations/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest');
     Route::post('/my-reservations', [GuestReservationController::class, 'store'])->name('reservations.store-guest');
@@ -40,6 +40,11 @@ Route::middleware('auth')->group(function () {
     // Guest viewing their own reservation details and invoice
     Route::get('/my-reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
     Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
+
+    // 4. Guest Customer Profile Edit (To fill in phone/passport details)
+    Route::get('/customer/profile/edit', [CustomerController::class, 'editGuestProfile'])->name('customer.edit-guest-profile');
+    Route::put('/customer/profile', [CustomerController::class, 'updateGuestProfile'])->name('customer.update-guest-profile');
+
 
     // Profile routes (standard Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -62,6 +67,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Reservations CRUD (Admin can view/edit ALL)
     Route::resource('reservations', ReservationController::class);
+
+    // User Role Management (NEW)
+    Route::resource('users', UserController::class);
 
     // Invoice Viewing (Admin uses the standard reservations.invoice)
     Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');

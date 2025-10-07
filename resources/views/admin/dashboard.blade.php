@@ -48,6 +48,14 @@
                             &rarr;</div>
                     </a>
 
+                    <a href="{{ route('users.index') }}"
+                        class="block p-6 bg-blue-500 hover:bg-blue-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                        <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Users & Roles') }}</h2>
+                        <p class="text-blue-100">{{ __('View system users and assign administrative roles.') }}</p>
+                        <div class="mt-4 text-right text-sm font-semibold text-blue-200">{{ __('Go to Users') }}
+                            &rarr;</div>
+                    </a>
+
                 </div>
             </div>
         </div>

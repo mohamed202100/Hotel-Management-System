@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles; // Make sure this is included
 
 class User extends Authenticatable
 {
@@ -15,7 +14,8 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
-     * * @var array<int, string>
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -42,4 +42,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Define the One-to-One relationship to the Customer profile.
+     * This uses the foreign key 'user_id' on the customers table.
+     */
+    public function customer()
+    {
+        return $this->hasOne(Customer::class, 'user_id');
+    }
 }
