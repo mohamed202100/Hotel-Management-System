@@ -9,19 +9,16 @@ use App\Http\Controllers\Api\CustomerController;
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('logout', [AuthController::class, 'logout']);
 
-    // Reservations
-    Route::get('/reservations', [ReservationController::class, 'index']);
-    Route::get('/reservations/{id}', [ReservationController::class, 'show']);
-    Route::post('/reservations', [ReservationController::class, 'store']);
-    Route::put('/reservations/{id}', [ReservationController::class, 'update']);
-    Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
+    Route::middleware('role:admin')->group(function () {
+        Route::apiResource('reservations', ReservationController::class);
+        Route::apiResource('rooms', RoomController::class);
+    });
 
-    // Rooms
-    Route::get('/rooms', [RoomController::class, 'index']);
-    Route::get('/rooms/{id}', [RoomController::class, 'show']);
+    Route::middleware('role:guest')->group(function () {
+        Route::get('my-reservations', [ReservationController::class, 'myReservations']);
+    });
 
-    // Customers
-    Route::get('/customers', [CustomerController::class, 'index']);
-    Route::get('/customers/{id}', [CustomerController::class, 'show']);
+    Route::apiResource('customers', CustomerController::class)->middleware('role:admin');
 });
