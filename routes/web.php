@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 // PUBLIC ROUTE
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 // GUEST/USER ROUTES (PROTECTED BY AUTH)
 Route::middleware('auth')->group(function () {
@@ -36,7 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-reservations', [GuestReservationController::class, 'index'])->name('guest.reservations.index');
     Route::get('/my-reservations/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest');
     Route::post('/my-reservations', [GuestReservationController::class, 'store'])->name('reservations.store-guest');
-
+    // Cancel a guest reservation
+    Route::patch('/my-reservations/{reservation}/cancel', [GuestReservationController::class, 'cancel'])
+        ->name('guest.reservations.cancel');
     // Guest viewing their own reservation details and invoice
     Route::get('/my-reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
 

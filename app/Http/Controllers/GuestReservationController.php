@@ -15,20 +15,15 @@ class GuestReservationController extends Controller
 {
     /**
      * Display a listing of reservations for the logged-in Guest user.
-     * (Guest home page)
      */
     public function index()
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $customer = $user->customer;
 
-        // 1. Find the customer associated with the logged-in user
-        $customer = Customer::where('user_id', $userId)->first();
-
-        // If the user hasn't made a booking or their customer profile doesn't exist, return empty
         if (!$customer) {
             $reservations = collect();
         } else {
-            // 2. Guest user sees only reservations linked to their customer profile
             $reservations = Reservation::where('customer_id', $customer->id)
                 ->with(['room', 'invoice'])
                 ->orderBy('check_in_date', 'asc')
@@ -45,8 +40,6 @@ class GuestReservationController extends Controller
     {
         $selectedRoomId = $request->input('room_id');
         $rooms = Room::where('status', 'available')->get();
-
-        // Pass the customer object itself for the warning check in the view
         $customer = Auth::user()->customer;
 
         return view('my_reservations.create-guest', compact('rooms', 'selectedRoomId', 'customer'));
@@ -60,7 +53,6 @@ class GuestReservationController extends Controller
         $user = Auth::user();
         $customer = $user->customer;
 
-        // ✅ Validation
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'check_in_date' => 'required|date',
@@ -73,24 +65,18 @@ class GuestReservationController extends Controller
             $checkIn = Carbon::createFromFormat('Y-m-d', $validated['check_in_date'])->startOfDay();
             $checkOut = Carbon::createFromFormat('Y-m-d', $validated['check_out_date'])->startOfDay();
         } catch (\Exception $e) {
-            return back()->withErrors([
-                'check_in_date' => 'Invalid date format provided.'
-            ])->withInput();
+            return back()->withErrors(['check_in_date' => 'Invalid date format'])->withInput();
         }
 
         if ($checkOut->lte($checkIn)) {
-            return back()->withErrors([
-                'check_out_date' => 'Check-out date must be after check-in date.'
-            ])->withInput();
+            return back()->withErrors(['check_out_date' => 'Check-out date must be after check-in'])->withInput();
         }
 
         $nights = $checkOut->diffInDays($checkIn);
 
         $isAvailable = $this->checkRoomAvailability($validated['room_id'], $checkIn, $checkOut, null);
         if (!$isAvailable) {
-            return back()->withErrors([
-                'room_id' => 'The selected room is no longer available during the specified dates.'
-            ])->withInput();
+            return back()->withErrors(['room_id' => 'The selected room is not available for these dates'])->withInput();
         }
 
         $subtotal = $room->base_price * $nights;
@@ -121,7 +107,7 @@ class GuestReservationController extends Controller
 
             return redirect()
                 ->route('guest.reservations.index')
-                ->with('success', 'Your reservation request (ID: ' . $reservation->id . ') has been submitted successfully and is pending confirmation by the hotel administration.');
+                ->with('success', 'Your reservation request (ID: ' . $reservation->id . ') is submitted and PENDING confirmation.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to submit reservation: ' . $e->getMessage())->withInput();
@@ -129,15 +115,13 @@ class GuestReservationController extends Controller
     }
 
     /**
-     * Private helper function to check room availability.
-     * Logic is duplicated from AdminController to keep the controllers decoupled.
+     * Check if a room is available for given dates.
      */
     private function checkRoomAvailability(int $roomId, Carbon $checkIn, Carbon $checkOut, ?int $excludeReservationId): bool
     {
         $query = Reservation::where('room_id', $roomId)
             ->where('status', '!=', 'cancelled')
             ->where(function ($q) use ($checkIn, $checkOut) {
-                // Check for overlapping reservations
                 $q->whereBetween('check_in_date', [$checkIn, $checkOut->subDay()])
                     ->orWhereBetween('check_out_date', [$checkIn->addDay(), $checkOut])
                     ->orWhere(function ($qq) use ($checkIn, $checkOut) {
@@ -146,11 +130,27 @@ class GuestReservationController extends Controller
                     });
             });
 
-        // Exclude the current reservation when updating
         if ($excludeReservationId) {
             $query->where('id', '!=', $excludeReservationId);
         }
 
         return $query->doesntExist();
+    }
+
+    public function cancel(Reservation $reservation)
+    {
+        $customer = Auth::user()->customer;
+
+        if ($reservation->customer_id !== $customer->id) {
+            return redirect()->route('guest.reservations.index')
+                ->with('error', 'You are not authorized to cancel this reservation.');
+        }
+
+        $reservation->invoice()->delete();
+
+        $reservation->delete();
+
+        return redirect()->route('guest.reservations.index')
+            ->with('success', 'Your reservation has been successfully cancelled.');
     }
 }

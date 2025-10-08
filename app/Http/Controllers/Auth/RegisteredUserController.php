@@ -64,6 +64,6 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // Uses the route() helper function to redirect to the named 'dashboard' route
-        return redirect()->route('dashboard');
+        return redirect()->route('welcome');
     }
 }

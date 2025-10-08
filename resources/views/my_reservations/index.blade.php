@@ -85,12 +85,18 @@
                                             </span>
                                         </td>
                                         <td class="py-4 px-6 space-x-2 flex">
-                                            <!-- View Details -->
-                                            <a href="{{ route('reservations.my-show', $reservation->id) }}"
-                                                class="text-blue-600 hover:text-blue-800 font-medium">
-                                                {{ __('VIEW') }}
-                                            </a>
-
+                                            @if (in_array($reservation->status, ['pending', 'confirmed']))
+                                                <form method="POST"
+                                                    action="{{ route('guest.reservations.cancel', $reservation->id) }}"
+                                                    onsubmit="return confirm('{{ __('Are you sure you want to cancel this reservation?') }}');">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm transition duration-300">
+                                                        {{ __('Cancel') }}
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
