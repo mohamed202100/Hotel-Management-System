@@ -73,7 +73,7 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        if ($customer->reservations()->count() > 0) {
+        if ($customer->reservations()->exists()) {
             return redirect()->route('customers.index')
                 ->with('error', 'Cannot delete customer with active reservations.');
         }
@@ -111,12 +111,10 @@ class CustomerController extends Controller
         $customer->update($validated);
 
         // Update the linked User record if exists
-        if ($customer->user) {
-            $customer->user->update([
-                'name'  => $validated['first_name'] . ' ' . ($validated['last_name'] ?? ''),
-                'email' => $validated['email'],
-            ]);
-        }
+        optional($customer->user)->update([
+            'name'  => $validated['first_name'] . ' ' . ($validated['last_name'] ?? ''),
+            'email' => $validated['email'],
+        ]);
 
         return redirect()->route('guest.reservations.index')
             ->with('success', 'Your customer profile has been updated successfully.');
