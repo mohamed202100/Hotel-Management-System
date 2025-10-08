@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Route;
 
 // PUBLIC ROUTE
 Route::get('/', function () {
-    return view('welcome');
+    $isAdmin = auth()->check() && auth()->user()->hasRole('admin');
+    return view('welcome', compact('isAdmin'));
 })->name('welcome');
+
 
 // GUEST/USER ROUTES (PROTECTED BY AUTH)
 Route::middleware('auth')->group(function () {
