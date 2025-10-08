@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\GuestReservationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomViewerController;
+use App\Http\Controllers\SocialiteController; // تم الإضافة: المتحكم الجديد
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,9 @@ Route::middleware('auth')->group(function () {
         ->name('guest.reservations.cancel');
     // Guest viewing their own reservation details and invoice
     Route::get('/my-reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
+    // Note: reservations.invoice-guest route is defined in guest block but points to Admin controller.
+    Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
+
 
     // 4. Guest Customer Profile Edit (To fill in phone/passport details)
     Route::get('/customer/profile/edit', [CustomerController::class, 'editGuestProfile'])->name('customer.edit-guest-profile');
@@ -75,16 +79,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Reservations CRUD (Admin can view/edit ALL)
     Route::resource('reservations', ReservationController::class);
-    Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
+    // Admin PDF route (assuming this is only for admin use)
     Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
 
 
-
-    // User Role Management (NEW)
-    Route::resource('users', UserController::class);
+    // User Role Management
+    Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store']); // تم تصحيح User Resource
 
     // Invoice Viewing (Admin uses the standard reservations.invoice)
     Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');
+});
+
+// ------------------------------------
+// SOCIALITE ROUTES (Login via GitHub) - تمت الإضافة
+// ------------------------------------
+Route::prefix('login/github')->group(function () {
+    // Redirect user to GitHub
+    Route::get('/', [SocialiteController::class, 'redirectToProvider'])->name('login.github');
+
+    // GitHub sends user back to this URL
+    Route::get('callback', [SocialiteController::class, 'handleProviderCallback']);
 });
 
 // Logout route (standard)
