@@ -15,12 +15,12 @@
                             {{ $customer->first_name . ' ' . $customer->last_name }}</h3>
                         <div class="space-x-2 flex">
                             <!-- Edit Button -->
-                            <a href="{{ route('customers.edit', $customer->id) }}"
+                            <a href="{{ route('admin.customers.edit', $customer->id) }}"
                                 class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                                 {{ __('Edit Customer') }}
                             </a>
                             <!-- Back Button -->
-                            <a href="{{ route('customers.index') }}"
+                            <a href="{{ route('admin.customers.index') }}"
                                 class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                                 {{ __('Back to List') }}
                             </a>

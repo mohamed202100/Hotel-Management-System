@@ -21,7 +21,7 @@
                 <div class="p-6 lg:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     <!-- Rooms Card -->
-                    <a href="{{ route('rooms.index') }}"
+                    <a href="{{ route('admin.rooms.index') }}"
                         class="block p-6 bg-indigo-500 hover:bg-indigo-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                         <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Rooms') }}</h2>
                         <p class="text-indigo-100">{{ __('Create, view, edit, and delete all room types and units.') }}
@@ -31,7 +31,7 @@
                     </a>
 
                     <!-- Customers Card -->
-                    <a href="{{ route('customers.index') }}"
+                    <a href="{{ route('admin.customers.index') }}"
                         class="block p-6 bg-green-500 hover:bg-green-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                         <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Customers') }}</h2>
                         <p class="text-green-100">{{ __('Maintain detailed records of all hotel customers.') }}</p>
@@ -40,7 +40,7 @@
                     </a>
 
                     <!-- Reservations Card (Placeholder for next step) -->
-                    <a href="{{ route('reservations.index') }}"
+                    <a href="{{ route('admin.reservations.index') }}"
                         class="block p-6 bg-red-500 hover:bg-red-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                         <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Reservations') }}</h2>
                         <p class="text-red-100">{{ __('View and create new bookings and check-in/out guests.') }}</p>
@@ -48,7 +48,7 @@
                             &rarr;</div>
                     </a>
 
-                    <a href="{{ route('users.index') }}"
+                    <a href="{{ route('admin.users.index') }}"
                         class="block p-6 bg-blue-500 hover:bg-blue-600 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                         <h2 class="text-2xl font-bold text-white mb-2">{{ __('Manage Users & Roles') }}</h2>
                         <p class="text-blue-100">{{ __('View system users and assign administrative roles.') }}</p>

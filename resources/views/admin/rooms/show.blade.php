@@ -15,11 +15,11 @@
                         <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('Room Number') }}:
                             {{ $room->room_number }}</h3>
                         <div class="flex space-x-3">
-                            <a href="{{ route('rooms.edit', $room->id) }}"
+                            <a href="{{ route('admin.rooms.edit', $room->id) }}"
                                 class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                                 {{ __('Edit Room') }}
                             </a>
-                            <a href="{{ route('rooms.index') }}"
+                            <a href="{{ route('admin.rooms.index') }}"
                                 class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                                 {{ __('Back to List') }}
                             </a>

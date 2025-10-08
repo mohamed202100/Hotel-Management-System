@@ -37,7 +37,7 @@ class CustomerController extends Controller
     {
         Customer::create($request->validated());
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Customer created successfully!');
     }
 
@@ -64,7 +64,7 @@ class CustomerController extends Controller
     {
         $customer->update($request->validated());
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Customer updated successfully!');
     }
 
@@ -74,13 +74,13 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         if ($customer->reservations()->exists()) {
-            return redirect()->route('customers.index')
+            return redirect()->route('admin.customers.index')
                 ->with('error', 'Cannot delete customer with active reservations.');
         }
 
         $customer->delete();
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Customer deleted successfully!');
     }
 

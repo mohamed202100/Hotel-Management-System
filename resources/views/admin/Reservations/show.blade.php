@@ -20,17 +20,17 @@ use Carbon\Carbon;
                         </h3>
                         <div class="flex space-x-3">
                             @if ($reservation->status === 'confirmed')
-                                <a href="{{ route('reservations.invoice', $reservation->id) }}" target="_blank"
+                                <a href="{{ route('admin.reservations.invoice', $reservation->id) }}" target="_blank"
                                     class="btn bg-blue-500 hover:bg-blue-600">
                                     {{ __('View/Print Invoice') }}
                                 </a>
                             @endif
-                            <a href="{{ route('reservations.edit', $reservation->id) }}"
+                            <a href="{{ route('admin.reservations.edit', $reservation->id) }}"
                                 class="btn bg-yellow-500 hover:bg-yellow-600">
                                 {{ __('Edit Reservation') }}
                             </a>
 
-                            <a href="{{ route('reservations.index') }}" class="btn bg-gray-500 hover:bg-gray-600">
+                            <a href="{{ route('admin.reservations.index') }}" class="btn bg-gray-500 hover:bg-gray-600">
                                 {{ __('Back to List') }}
                             </a>
                         </div>

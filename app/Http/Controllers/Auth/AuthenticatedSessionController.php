@@ -30,7 +30,7 @@ class AuthenticatedSessionController extends Controller
         Session::regenerate();
 
         if (Auth::user()->hasRole('admin')) {
-            return redirect()->route('welcome');
+            return redirect()->intended(route('welcome', absolute: false));
         }
 
         return redirect()->intended(route('welcome'));

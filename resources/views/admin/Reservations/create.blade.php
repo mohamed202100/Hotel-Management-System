@@ -29,13 +29,13 @@
                     <!-- Header and Back Button -->
                     <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                         <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('New Reservation') }}</h3>
-                        <a href="{{ route('reservations.index') }}"
+                        <a href="{{ route('admin.reservations.index') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                             {{ __('Back to List') }}
                         </a>
                     </div>
 
-                    <form method="POST" action="{{ route('reservations.store') }}" class="mt-6 space-y-6">
+                    <form method="POST" action="{{ route('admin.reservations.store') }}" class="mt-6 space-y-6">
                         @csrf
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

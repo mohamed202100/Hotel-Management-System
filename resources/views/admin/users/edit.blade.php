@@ -14,7 +14,7 @@
                     <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                         <h3 class="text-3xl font-extrabold text-indigo-500">{{ __('Editing Role for') }}:
                             {{ $user->name }}</h3>
-                        <a href="{{ route('users.index') }}"
+                        <a href="{{ route('admin.users.index') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                             {{ __('Back to Users') }}
                         </a>
@@ -29,7 +29,7 @@
                     </p>
 
                     <!-- Form for Role Update -->
-                    <form method="POST" action="{{ route('users.update', $user->id) }}" class="mt-6 space-y-6">
+                    <form method="POST" action="{{ route('admin.users.update', $user->id) }}" class="mt-6 space-y-6">
                         @csrf
                         @method('PUT')
 

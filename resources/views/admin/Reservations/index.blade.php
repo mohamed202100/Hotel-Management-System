@@ -26,7 +26,7 @@
                     @endif
 
                     <!-- Filter Dropdown -->
-                    <form method="GET" action="{{ route('reservations.index') }}"
+                    <form method="GET" action="{{ route('admin.reservations.index') }}"
                         class="mb-4 flex items-center gap-4">
                         <label for="status" class="font-semibold">{{ __('Filter by Status:') }}</label>
                         <select name="status" id="status" onchange="this.form.submit()"
@@ -38,14 +38,14 @@
                                 </option>
                             @endforeach
                         </select>
-                        <a href="{{ route('reservations.index') }}"
+                        <a href="{{ route('admin.reservations.index') }}"
                             class="underline text-indigo-600">{{ __('Reset') }}</a>
                     </form>
 
                     <!-- Header and Add Button -->
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-2xl font-bold">{{ __('Reservation List') }}</h3>
-                        <a href="{{ route('reservations.create') }}"
+                        <a href="{{ route('admin.reservations.create') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                             {{ __('Add New Reservation') }}
                         </a>
@@ -108,12 +108,12 @@
                                                 </span>
                                             </td>
                                             <td class="py-4 px-6 flex space-x-2">
-                                                <a href="{{ route('reservations.show', $reservation->id) }}"
+                                                <a href="{{ route('admin.reservations.show', $reservation->id) }}"
                                                     class="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-300 font-medium">{{ __('VIEW') }}</a>
-                                                <a href="{{ route('reservations.edit', $reservation->id) }}"
+                                                <a href="{{ route('admin.reservations.edit', $reservation->id) }}"
                                                     class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-500 dark:hover:text-yellow-300 font-medium">{{ __('EDIT') }}</a>
                                                 <form method="POST"
-                                                    action="{{ route('reservations.destroy', $reservation->id) }}"
+                                                    action="{{ route('admin.reservations.destroy', $reservation->id) }}"
                                                     onsubmit="return confirm('{{ __('Are you sure?') }}');">
                                                     @csrf
                                                     @method('DELETE')

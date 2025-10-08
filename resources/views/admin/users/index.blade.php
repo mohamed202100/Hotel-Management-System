@@ -14,7 +14,7 @@
                     <div class="flex justify-between items-center mb-6 border-b pb-3">
                         <h3 class="text-3xl font-bold text-indigo-500">{{ __('System Users') }}</h3>
                         <!-- NEW BUTTON: Add New User -->
-                        <a href="{{ route('users.create') }}"
+                        <a href="{{ route('admin.users.create') }}"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300">
                             {{ __('Add New User') }}
                         </a>
@@ -62,7 +62,7 @@
                                                 </span>
                                             </td>
                                             <td class="py-4 px-6">
-                                                <a href="{{ route('users.edit', $user->id) }}"
+                                                <a href="{{ route('admin.users.edit', $user->id) }}"
                                                     class="text-indigo-600 hover:text-indigo-800 font-medium">
                                                     {{ __('Edit Role') }}
                                                 </a>

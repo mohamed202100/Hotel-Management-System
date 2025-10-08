@@ -25,7 +25,7 @@
                     <!-- Header and Add Button -->
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-2xl font-bold">{{ __('Customer List') }}</h3>
-                        <a href="{{ route('customers.create') }}"
+                        <a href="{{ route('admin.customers.create') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md">
                             {{ __('Add New Customer') }}
                         </a>
@@ -57,20 +57,20 @@
                                         <td class="py-4 px-6">{{ $customer->passport_id }}</td>
                                         <td class="py-4 px-6 flex space-x-2">
                                             <!-- View Button -->
-                                            <a href="{{ route('customers.show', $customer->id) }}"
+                                            <a href="{{ route('admin.customers.show', $customer->id) }}"
                                                 class="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-300 font-medium">
                                                 {{ __('VIEW') }}
                                             </a>
 
                                             <!-- Edit Button -->
-                                            <a href="{{ route('customers.edit', $customer->id) }}"
+                                            <a href="{{ route('admin.customers.edit', $customer->id) }}"
                                                 class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-500 dark:hover:text-yellow-300 font-medium">
                                                 {{ __('EDIT') }}
                                             </a>
 
                                             <!-- Delete Form -->
                                             <form method="POST"
-                                                action="{{ route('customers.destroy', $customer->id) }}"
+                                                action="{{ route('admin.customers.destroy', $customer->id) }}"
                                                 onsubmit="return confirm('{{ __('Are you sure you want to delete this customer?') }}');">
                                                 @csrf
                                                 @method('DELETE')

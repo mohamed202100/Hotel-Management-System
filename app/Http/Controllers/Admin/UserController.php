@@ -39,7 +39,7 @@ class UserController extends Controller
 
         $user->assignRole('admin');
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', "New Admin user ('{$user->name}') created successfully.");
     }
 
@@ -67,7 +67,7 @@ class UserController extends Controller
 
         $user->syncRoles([$validated['role']]);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', "User '{$user->name}' role updated to {$validated['role']}");
     }
 }

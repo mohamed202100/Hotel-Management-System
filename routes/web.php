@@ -66,29 +66,31 @@ Route::middleware('auth')->group(function () {
 
 
 // ADMIN ROUTES (PROTECTED BY ROLE:ADMIN)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-    // Admin Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        // Admin Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Rooms CRUD
-    Route::resource('rooms', RoomController::class);
+        // Rooms CRUD
+        Route::resource('rooms', RoomController::class);
 
-    // Customers CRUD
-    Route::resource('customers', CustomerController::class);
+        // Customers CRUD
+        Route::resource('customers', CustomerController::class);
 
-    // Reservations CRUD (Admin can view/edit ALL)
-    Route::resource('reservations', ReservationController::class);
-    // Admin PDF route (assuming this is only for admin use)
-    Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
+        // Reservations CRUD (Admin can view/edit ALL)
+        Route::resource('reservations', ReservationController::class);
+        // Admin PDF route (assuming this is only for admin use)
+        Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
 
 
-    // User Role Management
-    Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store']); // تم تصحيح User Resource
+        // User Role Management
+        Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store']);
 
-    // Invoice Viewing (Admin uses the standard reservations.invoice)
-    Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');
-});
+        // Invoice Viewing (Admin uses the standard reservations.invoice)
+        Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');
+    });
 
 // ------------------------------------
 // SOCIALITE ROUTES (Login via GitHub) - تمت الإضافة

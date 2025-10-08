@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
         // 3. CREATE the associated Customer profile (CRUCIAL FIX)
         // We MUST explicitly pass the 'user_id' of the newly created User.
         Customer::create([
-            'user_id' => Auth::id(), // <-- THIS IS THE FIX
+            'user_id' => $user->id, // <-- THIS IS THE FIX
             'first_name' => $request->name,
             'last_name' => '',
             'email' => $request->email,

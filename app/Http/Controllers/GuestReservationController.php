@@ -120,7 +120,7 @@ class GuestReservationController extends Controller
     private function checkRoomAvailability(int $roomId, Carbon $checkIn, Carbon $checkOut, ?int $excludeReservationId): bool
     {
         $query = Reservation::where('room_id', $roomId)
-            ->where('status', '!=', 'cancelled')
+            ->whereNotIn('status', ['cancelled', 'pending'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->whereBetween('check_in_date', [$checkIn, $checkOut->subDay()])
                     ->orWhereBetween('check_out_date', [$checkIn->addDay(), $checkOut])
@@ -136,6 +136,7 @@ class GuestReservationController extends Controller
 
         return $query->doesntExist();
     }
+
 
     public function cancel(Reservation $reservation)
     {

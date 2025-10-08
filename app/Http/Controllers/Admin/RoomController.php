@@ -40,7 +40,7 @@ class RoomController extends Controller
     {
         Room::create($request->validated());
 
-        return redirect()->route('rooms.index')->with('success', 'Room created successfully.');
+        return redirect()->route('admin.rooms.index')->with('success', 'Room created successfully.');
     }
 
     /**
@@ -66,7 +66,7 @@ class RoomController extends Controller
     {
         $room->update($request->validated());
 
-        return redirect()->route('rooms.index')->with('success', 'Room updated successfully.');
+        return redirect()->route('admin.rooms.index')->with('success', 'Room updated successfully.');
     }
 
     /**
@@ -75,10 +75,10 @@ class RoomController extends Controller
     public function destroy(Room $room)
     {
         if ($room->reservations()->where('status', '!=', 'cancelled')->exists()) {
-            return redirect()->route('rooms.index')->with('error', 'Cannot delete room with active reservations.');
+            return redirect()->route('admin.rooms.index')->with('error', 'Cannot delete room with active reservations.');
         }
 
         $room->delete();
-        return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');
+        return redirect()->route('admin.rooms.index')->with('success', 'Room deleted successfully.');
     }
 }
