@@ -29,6 +29,7 @@
                                         {{ __('Available Rooms') }}
                                     </x-nav-link>
                                 @endif
+
                             </div>
                         @endauth
                     </div>

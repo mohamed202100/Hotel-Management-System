@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Customer;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Notifications\BookingStatusChanged;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

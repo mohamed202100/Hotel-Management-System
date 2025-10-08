@@ -3,6 +3,13 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Home') }}
         </h2>
+
+        <script>
+            document.getElementById('notif-btn').addEventListener('click', () => {
+                document.getElementById('notif-dropdown').classList.toggle('hidden');
+            });
+        </script>
+
     </x-slot>
 
     <div class="py-12">
@@ -14,4 +21,5 @@
             </div>
         </div>
     </div>
+
 </x-app-layout>
