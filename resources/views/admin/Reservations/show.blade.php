@@ -25,7 +25,6 @@ use Carbon\Carbon;
                                     {{ __('View/Print Invoice') }}
                                 </a>
                             @endif
-
                             <a href="{{ route('reservations.edit', $reservation->id) }}"
                                 class="btn bg-yellow-500 hover:bg-yellow-600">
                                 {{ __('Edit Reservation') }}

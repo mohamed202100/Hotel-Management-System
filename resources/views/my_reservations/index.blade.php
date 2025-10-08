@@ -5,6 +5,18 @@
         </h2>
     </x-slot>
 
+    @if (session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -46,7 +58,8 @@
                                             #{{ $reservation->id }}
                                         </th>
                                         <td class="py-4 px-6">{{ $reservation->room->room_number ?? 'N/A' }}
-                                            ({{ $reservation->room->type ?? 'N/A' }})</td>
+                                            ({{ $reservation->room->type ?? 'N/A' }})
+                                        </td>
                                         <td class="py-4 px-6">
                                             {{ \Carbon\Carbon::parse($reservation->check_in_date)->format('M d, Y') }}
                                         </td>
@@ -78,13 +91,6 @@
                                                 {{ __('VIEW') }}
                                             </a>
 
-                                            <!-- Invoice Button (Only if confirmed) -->
-                                            @if ($reservation->status === 'confirmed')
-                                                <a href="{{ route('reservations.invoice-guest', $reservation->id) }}"
-                                                    class="text-indigo-600 hover:text-indigo-800 font-medium ml-2">
-                                                    {{ __('Invoice') }}
-                                                </a>
-                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

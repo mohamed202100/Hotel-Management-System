@@ -39,7 +39,6 @@ Route::middleware('auth')->group(function () {
 
     // Guest viewing their own reservation details and invoice
     Route::get('/my-reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
-    Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
 
     // 4. Guest Customer Profile Edit (To fill in phone/passport details)
     Route::get('/customer/profile/edit', [CustomerController::class, 'editGuestProfile'])->name('customer.edit-guest-profile');
@@ -67,8 +66,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Reservations CRUD (Admin can view/edit ALL)
     Route::resource('reservations', ReservationController::class);
-
+    Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
     Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
+
 
 
     // User Role Management (NEW)

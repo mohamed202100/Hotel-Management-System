@@ -67,10 +67,8 @@ class GuestReservationController extends Controller
             'check_out_date' => 'required|date|after:check_in_date',
         ]);
 
-        // ✅ جلب بيانات الغرفة
         $room = Room::findOrFail($validated['room_id']);
 
-        // ✅ معالجة التواريخ بطريقة مضمونة بدون مشاكل timezone
         try {
             $checkIn = Carbon::createFromFormat('Y-m-d', $validated['check_in_date'])->startOfDay();
             $checkOut = Carbon::createFromFormat('Y-m-d', $validated['check_out_date'])->startOfDay();
@@ -80,17 +78,14 @@ class GuestReservationController extends Controller
             ])->withInput();
         }
 
-        // ✅ تحقق أن تاريخ الخروج بعد الدخول فعلاً
         if ($checkOut->lte($checkIn)) {
             return back()->withErrors([
                 'check_out_date' => 'Check-out date must be after check-in date.'
             ])->withInput();
         }
 
-        // ✅ حساب عدد الليالي
         $nights = $checkOut->diffInDays($checkIn);
 
-        // ✅ التحقق من توافر الغرفة
         $isAvailable = $this->checkRoomAvailability($validated['room_id'], $checkIn, $checkOut, null);
         if (!$isAvailable) {
             return back()->withErrors([
@@ -98,14 +93,12 @@ class GuestReservationController extends Controller
             ])->withInput();
         }
 
-        // ✅ حساب المبالغ
         $subtotal = $room->base_price * $nights;
         $taxRate = 0.15;
         $totalAmount = $subtotal * (1 + $taxRate);
 
         DB::beginTransaction();
         try {
-            // ✅ إنشاء الحجز
             $reservation = Reservation::create([
                 'room_id' => $validated['room_id'],
                 'customer_id' => $customer->id,
@@ -116,7 +109,6 @@ class GuestReservationController extends Controller
                 'status' => 'pending',
             ]);
 
-            // ✅ إنشاء الفاتورة
             Invoice::create([
                 'reservation_id' => $reservation->id,
                 'amount_due' => $totalAmount,
@@ -127,7 +119,6 @@ class GuestReservationController extends Controller
 
             DB::commit();
 
-            // ✅ النجاح
             return redirect()
                 ->route('guest.reservations.index')
                 ->with('success', 'Your reservation request (ID: ' . $reservation->id . ') has been submitted successfully and is pending confirmation by the hotel administration.');
