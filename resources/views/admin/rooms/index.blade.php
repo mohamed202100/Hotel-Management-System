@@ -27,6 +27,25 @@
                         </a>
                     </div>
 
+                    <!-- Filter by Status -->
+                    <div class="mb-6">
+                        <form method="GET" action="{{ route('rooms.index') }}" class="flex space-x-4 items-center">
+                            <label for="status" class="font-semibold">{{ __('Filter by Status:') }}</label>
+                            <select name="status" id="status"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                                onchange="this.form.submit()">
+                                <option value="">{{ __('All') }}</option>
+                                <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>
+                                    {{ __('Available') }}</option>
+                                <option value="occupied" {{ request('status') == 'occupied' ? 'selected' : '' }}>
+                                    {{ __('Occupied') }}</option>
+                                <option value="maintenance" {{ request('status') == 'maintenance' ? 'selected' : '' }}>
+                                    {{ __('Maintenance') }}</option>
+                            </select>
+                        </form>
+                    </div>
+
+
                     <!-- Rooms Table -->
                     <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">

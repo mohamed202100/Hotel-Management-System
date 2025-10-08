@@ -6,15 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
 use App\Models\Room;
+use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rooms = Room::paginate(15);
+        $query = Room::query();
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $rooms = $query->paginate(15)->withQueryString();
         return view('admin.rooms.index', compact('rooms'));
     }
 
