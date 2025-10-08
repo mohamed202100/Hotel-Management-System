@@ -20,7 +20,7 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
         ]);
 
         $user = User::create([
@@ -46,7 +46,7 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'sometimes|string',
             'email' => "sometimes|email|unique:users,email,{$id}",
-            'password' => 'sometimes|string|min:6',
+            'password' => 'sometimes|string|min:8',
         ]);
 
         $customer->update([

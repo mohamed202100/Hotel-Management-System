@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRoomRequest;
+use App\Http\Requests\UpdateRoomRequest;
 use Illuminate\Http\Request;
 use App\Models\Room;
 
@@ -14,17 +16,9 @@ class RoomController extends Controller
         return response()->json($rooms);
     }
 
-    public function store(Request $request)
+    public function store(StoreRoomRequest $request)
     {
-        $request->validate([
-            'room_number' => 'required|unique:rooms,room_number',
-            'type' => 'required|string',
-            'capacity' => 'required|integer',
-            'base_price' => 'required|numeric',
-            'status' => 'in:available,occupied,cleaning,maintenance',
-        ]);
-
-        $room = Room::create($request->all());
+        $room = Room::create($request->validated());
         return response()->json($room, 201);
     }
 
@@ -34,19 +28,11 @@ class RoomController extends Controller
         return response()->json($room);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateRoomRequest $request, $id)
     {
         $room = Room::findOrFail($id);
 
-        $request->validate([
-            'room_number' => "required|unique:rooms,room_number,{$id}",
-            'type' => 'sometimes|string',
-            'capacity' => 'sometimes|integer',
-            'base_price' => 'sometimes|numeric',
-            'status' => 'sometimes|in:available,occupied,cleaning,maintenance',
-        ]);
-
-        $room->update($request->all());
+        $room->update($request->validated());
         return response()->json($room);
     }
 
