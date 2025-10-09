@@ -9,55 +9,59 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\GuestReservationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomViewerController;
-use App\Http\Controllers\SocialiteController; // تم الإضافة: المتحكم الجديد
+use App\Http\Controllers\SocialiteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// ------------------------------
 // PUBLIC ROUTE
+// ------------------------------
 Route::get('/', function () {
     $isAdmin = auth()->check() && auth()->user()->hasRole('admin');
     return view('welcome', compact('isAdmin'));
 })->name('welcome');
 
 
-// GUEST/USER ROUTES (PROTECTED BY AUTH)
+// ------------------------------
+// AUTH + VERIFIED ROUTES (Guests & Admin)
+// ------------------------------
 Route::middleware('auth')->group(function () {
-    // 1. Redirection logic: Regular users go to their reservations list
+
+    // Redirect dashboard by role
     Route::get('/dashboard', function () {
         $user = Auth::user();
+
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
         }
-        // Guest users are redirected to their custom reservations index
+
         return redirect()->route('guest.reservations.index');
     })->name('dashboard');
 
-    // 2. Room Viewing (Guest can only see available rooms)
+
+    // ----------- Guest Routes -----------
+    Route::prefix('my-reservations')->group(function () {
+        Route::get('/', [GuestReservationController::class, 'index'])->name('guest.reservations.index');
+        Route::get('/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest');
+        Route::post('/', [GuestReservationController::class, 'store'])->name('reservations.store-guest');
+        Route::patch('/{reservation}/cancel', [GuestReservationController::class, 'cancel'])->name('guest.reservations.cancel');
+        Route::get('/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
+        Route::get('/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
+    });
+
+    // Room viewing (available rooms)
     Route::get('/available-rooms', [RoomViewerController::class, 'available'])->name('rooms.available');
 
-    // 3. Guest Reservation Management
-    Route::get('/my-reservations', [GuestReservationController::class, 'index'])->name('guest.reservations.index');
-    Route::get('/my-reservations/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest');
-    Route::post('/my-reservations', [GuestReservationController::class, 'store'])->name('reservations.store-guest');
-    // Cancel a guest reservation
-    Route::patch('/my-reservations/{reservation}/cancel', [GuestReservationController::class, 'cancel'])
-        ->name('guest.reservations.cancel');
-    // Guest viewing their own reservation details and invoice
-    Route::get('/my-reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
-    // Note: reservations.invoice-guest route is defined in guest block but points to Admin controller.
-    Route::get('/my-reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
-
-
-    // 4. Guest Customer Profile Edit (To fill in phone/passport details)
+    // Guest profile update (phone, passport, etc.)
     Route::get('/customer/profile/edit', [CustomerController::class, 'editGuestProfile'])->name('customer.edit-guest-profile');
     Route::put('/customer/profile', [CustomerController::class, 'updateGuestProfile'])->name('customer.update-guest-profile');
 
-
-    // Profile routes (standard Breeze)
+    // Breeze Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Mark all notifications as read
     Route::get('/notifications/read-all', function () {
         Auth::user()->unreadNotifications->markAsRead();
         return back();
@@ -65,45 +69,45 @@ Route::middleware('auth')->group(function () {
 });
 
 
-// ADMIN ROUTES (PROTECTED BY ROLE:ADMIN)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')
+// ------------------------------
+// ADMIN ROUTES (Protected by role:admin)
+// ------------------------------
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // Admin Dashboard
+        // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Rooms CRUD
+        // CRUD routes
         Route::resource('rooms', RoomController::class);
-
-        // Customers CRUD
         Route::resource('customers', CustomerController::class);
-
-        // Reservations CRUD (Admin can view/edit ALL)
         Route::resource('reservations', ReservationController::class);
-        // Admin PDF route (assuming this is only for admin use)
-        Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
-
-
-        // User Role Management
         Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store']);
 
-        // Invoice Viewing (Admin uses the standard reservations.invoice)
+        // Admin invoices
+        Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
         Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');
     });
 
-// ------------------------------------
-// SOCIALITE ROUTES (Login via GitHub) - تمت الإضافة
-// ------------------------------------
-Route::prefix('login/github')->group(function () {
-    // Redirect user to GitHub
-    Route::get('/', [SocialiteController::class, 'redirectToProvider'])->name('login.github');
 
-    // GitHub sends user back to this URL
+// ------------------------------
+// SOCIALITE ROUTES (GitHub Login)
+// ------------------------------
+Route::prefix('login/github')->group(function () {
+    Route::get('/', [SocialiteController::class, 'redirectToProvider'])->name('login.github');
     Route::get('callback', [SocialiteController::class, 'handleProviderCallback']);
 });
 
-// Logout route (standard)
+
+// ------------------------------
+// LOGOUT ROUTE
+// ------------------------------
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
+
+// ------------------------------
+// AUTH ROUTES (Breeze default)
+// ------------------------------
 require __DIR__ . '/auth.php';

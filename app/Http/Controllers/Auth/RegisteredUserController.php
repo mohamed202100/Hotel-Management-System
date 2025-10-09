@@ -32,38 +32,40 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        // 🧩 1. Validate incoming data
+        $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // 1. Create the User record
+        // 🧩 2. Create the user
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => ucfirst($validatedData['name']),
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
         ]);
 
-        // 2. Assign the default 'guest' role
+        // 🧩 3. Assign default role
         $user->assignRole('guest');
 
-        // 3. CREATE the associated Customer profile (CRUCIAL FIX)
-        // We MUST explicitly pass the 'user_id' of the newly created User.
+        // 🧩 4. Create related Customer record
         Customer::create([
-            'user_id' => $user->id, // <-- THIS IS THE FIX
-            'first_name' => $request->name,
+            'user_id' => $user->id,
+            'first_name' => $validatedData['name'],
             'last_name' => '',
-            'email' => $request->email,
+            'email' => $validatedData['email'],
             'phone_number' => null,
             'passport_id' => null,
         ]);
 
+        // 🧩 5. Trigger Registered event (useful for email verification)
         event(new Registered($user));
 
+        // 🧩 6. Log in the new user
         Auth::login($user);
 
-        // Uses the route() helper function to redirect to the named 'dashboard' route
-        return redirect()->route('welcome');
+        // 🧩 7. Redirect to welcome page
+        return redirect()->route('welcome')->with('success', 'Account created successfully!');
     }
 }
