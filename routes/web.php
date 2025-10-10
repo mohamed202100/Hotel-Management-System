@@ -41,12 +41,12 @@ Route::middleware('auth')->group(function () {
 
     // ----------- Guest Routes -----------
     Route::prefix('my-reservations')->group(function () {
-        Route::get('/', [GuestReservationController::class, 'index'])->name('guest.reservations.index');
-        Route::get('/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest');
-        Route::post('/', [GuestReservationController::class, 'store'])->name('reservations.store-guest');
-        Route::patch('/{reservation}/cancel', [GuestReservationController::class, 'cancel'])->name('guest.reservations.cancel');
-        Route::get('/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show');
-        Route::get('/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest');
+        Route::get('/', [GuestReservationController::class, 'index'])->name('guest.reservations.index')->middleware('verified');
+        Route::get('/create', [GuestReservationController::class, 'create'])->name('reservations.create-guest')->middleware('verified');
+        Route::post('/', [GuestReservationController::class, 'store'])->name('reservations.store-guest')->middleware('verified');
+        Route::patch('/{reservation}/cancel', [GuestReservationController::class, 'cancel'])->name('guest.reservations.cancel')->middleware('verified');
+        Route::get('/{reservation}', [ReservationController::class, 'show'])->name('reservations.my-show')->middleware('verified');
+        Route::get('/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice-guest')->middleware('verified');
     });
 
     // Room viewing (available rooms)
@@ -81,14 +81,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // CRUD routes
-        Route::resource('rooms', RoomController::class);
-        Route::resource('customers', CustomerController::class);
-        Route::resource('reservations', ReservationController::class);
-        Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store']);
+        Route::resource('rooms', RoomController::class)->middleware('verified');
+        Route::resource('customers', CustomerController::class)->middleware('verified');
+        Route::resource('reservations', ReservationController::class)->middleware('verified');
+        Route::resource('users', UserController::class)->only(['index', 'edit', 'update', 'create', 'store'])->middleware('verified');
 
         // Admin invoices
-        Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf');
-        Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice');
+        Route::get('reservations/{id}/invoice-pdf', [ReservationController::class, 'printInvoice'])->name('reservations.invoice.pdf')->middleware('verified');
+        Route::get('/reservations/{reservation}/invoice', [ReservationController::class, 'invoice'])->name('reservations.invoice')->middleware('verified');
     });
 
 
